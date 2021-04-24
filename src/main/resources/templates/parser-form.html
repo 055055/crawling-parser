@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <header th:include="layout/header.html"></header>
+        <body>
+            <form class="row gy-2 gx-3 align-items-center">
+                <div class="col-auto">
+                    <div class="input-group">
+                        <div class="input-group-text">URL</div>
+                        <input type="text" class="form-control" id="url" placeholder="http://company.wemakeprice.com/wmp/about">
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <div class="input-group">
+                        <div class="input-group-text">Type</div>
+                        <select class="form-select" id="type">
+                            <option value="" selected>타입을 선택해 주세요.</option>
+                            <option value="text">HTML 테그 제외</option>
+                            <option value="html">Text 전체</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="input-group">
+                        <div class="input-group-text">출력 단위 묶음</div>
+                        <input type="text" class="form-control" id="unitNum" placeholder="출력 단위 묶음">
+                    </div>
+                </div>
+
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="button" id="callParser">생성</button>
+                </div>
+            </form>
+
+
+            <div id="callResult" style="display: none">
+                <div class="mb-3">
+                    <div id="quotientNum" ></div>
+                    <label for="quotientData" class="form-label">몫 데이터</label>
+                    <textarea class="form-control" id="quotientData" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <div id="remainderNum" ></div>
+                    <label for="remainderData" class="form-label">나머지 데이터</label>
+                    <textarea class="form-control" id="remainderData" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <div id="mergeDataLength"></div>
+                    <label for="mergeData" class="form-label">계산 전 데이터</label>
+                    <textarea class="form-control" id="mergeData" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="crawlingData" class="form-label">크롤링 데이터</label>
+                    <textarea class="form-control" id="crawlingData" rows="3"></textarea>
+                </div>
+            </div>
+
+        </body>
+    <footer th:include="layout/footer.html"></footer>
+    <script type="text/javascript" th:inline="javascript">
+        $(function () {
+
+            $('#callParser').on("click",function () {
+                var url = $('#url').val();
+                var type = $("#type option:selected").val();
+                var unitNum = $('#unitNum').val();
+
+                if(url === '' || unitNum ==='' || type === undefined || type === ''){
+                    Swal.fire({
+                        icon: 'error',
+                        title: '요청 값 확인',
+                        html: 'URL, Type, 출력단위묶음 확인'
+                    })
+                    return;
+                }
+
+                var reqUrl="/v1/parser";
+                var obj =  new Object();
+                obj.url = url;
+                obj.type = type;
+                obj.unitNum = unitNum;
+
+                ajaxPost(reqUrl,'POST',JSON.stringify(obj), parserCallBack);
+
+            });
+
+
+            function parserCallBack(response, jqXHR){
+                var title = '';
+                var text = '';
+                var icon = '';
+
+                if(jqXHR.status == 201){
+                    var jsonObj = JSON.parse(response);
+
+                    icon = 'success',
+                    title = '크롤링 데이터 파싱 성공',
+                    text = '아래 생성된 값을 확인해 주세요. ';
+
+                    $('#quotientData').text(jsonObj.quotientData);
+                    $('#remainderData').text(jsonObj.remainderData);
+                    $('#mergeData').text(jsonObj.mergeData);
+                    $('#quotientNum').text('몫 값 :'+jsonObj.quotientNum);
+                    $('#remainderNum').text('나머지 값 :'+jsonObj.remainderNum);
+                    $('#mergeDataLength').text('계산전 데이터  길이 :'+jsonObj.mergeDataLength);
+                    $('#crawlingData').text(jsonObj.crawlingData);
+
+                    $('#callResult').show();
+
+                }else{
+                    var jsonObj = JSON.parse(jqXHR.responseText);
+                    var errorFields = "";
+                    if(!!jsonObj.fieldValues){
+                        for (var i=0; i<jsonObj.fieldValues.length; i++){
+                            errorFields += jsonObj.fieldValues[i].reason+'<br>';
+                        }
+                    }
+                    icon = 'error';
+                    title = '크롤링 데이터 파싱 실패'+'('+jsonObj.code+')\n'+jsonObj.message;
+                    text = errorFields;
+                }
+
+                Swal.fire({
+                    icon: icon,
+                    title: title,
+                    html: text
+                })
+
+            };
+        })
+    </script>
+</html>
