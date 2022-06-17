@@ -6,7 +6,6 @@ import lombok.ToString;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @ToString
 @Getter
@@ -21,6 +20,4 @@ public class ParserReqDto {
 
     @Min(value = 1, message = "출력단위묶음을 입력해 주세요.(1이상)")
     private int unitNum;
-
-
 }

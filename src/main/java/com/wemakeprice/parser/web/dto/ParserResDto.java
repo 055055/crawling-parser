@@ -17,7 +17,6 @@ public class ParserResDto {
     private int remainderNum;
     private int mergeDataLength;
 
-
     @Builder
     public ParserResDto(String quotientData, String remainderData, Integer unitNum, Integer quotientNum, Integer remainderNum) {
         this.quotientData = quotientData;

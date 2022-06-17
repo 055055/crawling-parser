@@ -5,5 +5,4 @@ import com.wemakeprice.parser.web.dto.ParserResDto;
 
 public interface ParserService {
     ParserResDto requestParsing(ParserReqDto req);
-
 }

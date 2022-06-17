@@ -17,49 +17,47 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class ParserServiceImpl implements ParserService{
-
+public class ParserServiceImpl implements ParserService {
 
     @Override
     public ParserResDto requestParsing(ParserReqDto req) throws ServiceException {
-
         try {
-           String data = getCrawlingDataByType(req.getUrl(), req.getType());
-           String mergeData = dataSortingAndMerge(data);
-           ParserResDto res =  calculOutput(req.getUnitNum(), mergeData);
-           res.setMergeData(mergeData);
-           res.setMergeDataLength(mergeData.length());
-           res.setCrawlingData(data);
-           return res;
+            String data = getCrawlingDataByType(req.getUrl(), req.getType());
+            String mergeData = dataSortingAndMerge(data);
+            ParserResDto res = calculOutput(req.getUnitNum(), mergeData);
+            res.setMergeData(mergeData);
+            res.setMergeDataLength(mergeData.length());
+            res.setCrawlingData(data);
+            return res;
 
-        }catch (ServiceException se){
-            log.info("ServiceException : {}",se.getServiceError());
+        } catch (ServiceException se) {
+            log.info("ServiceException : {}", se.getServiceError());
             throw new ServiceException(se.getServiceError());
-        }catch (Exception e){
-            log.info("Exception : {}",e.getMessage(),e);
+        } catch (Exception e) {
+            log.info("Exception : {}", e.getMessage(), e);
             throw new ServiceException(e, ServiceError.SERVICE_ERROR);
         }
 
     }
 
     public String getCrawlingDataByType(String url, String parsingType) throws ServiceException {
-        try{
+        try {
             Document document = Jsoup.connect(url).get();
             log.debug("document = " + document);
-            switch (ParsingType.valueOf(parsingType.toUpperCase())){
+            switch (ParsingType.valueOf(parsingType.toUpperCase())) {
                 case HTML:
-                     return document.html();
+                    return document.html();
                 case TEXT:
-                     return  document.text();
+                    return document.text();
                 default:
                     throw new ServiceException(ServiceError.PARSING_DATA_TYPE_INVALID);
             }
 
-        }catch (ServiceException se){
-            log.info("ServiceException : {}",se.getServiceError());
+        } catch (ServiceException se) {
+            log.info("ServiceException : {}", se.getServiceError());
             throw new ServiceException(se.getServiceError());
-        }catch (Exception e){
-            log.info("Exception : {}",e.getMessage(),e);
+        } catch (Exception e) {
+            log.info("Exception : {}", e.getMessage(), e);
             throw new ServiceException(e, ServiceError.PARSING_HTML_REQUEST_ERROR);
         }
     }
@@ -71,18 +69,20 @@ public class ParserServiceImpl implements ParserService{
         List<Integer> numbers = new ArrayList();
         List<String> strings = new ArrayList();
 
-        try{
+        try {
             for (int i = 0; i < data.length(); i++) {
                 char[] target = data.toCharArray();
                 int targetIndex = TARGET_CHARACTERS.indexOf(target[i]);
-                if (targetIndex > -1 && targetIndex<10) numbers.add(Character.getNumericValue(target[i]));
-                if (targetIndex > -1 && targetIndex>=10) strings.add(String.valueOf(target[i]));
+                if (targetIndex > -1 && targetIndex < 10)
+                    numbers.add(Character.getNumericValue(target[i]));
+                if (targetIndex > -1 && targetIndex >= 10) strings.add(String.valueOf(target[i]));
             }
 
-            if(numbers.isEmpty() && strings.isEmpty()) throw new ServiceException(ServiceError.PARSING_DATA_IS_EMPTY);
+            if (numbers.isEmpty() && strings.isEmpty())
+                throw new ServiceException(ServiceError.PARSING_DATA_IS_EMPTY);
 
-            log.debug("numbers before sort : {}",numbers);
-            log.debug("strings before sort : {}",strings);
+            log.debug("numbers before sort : {}", numbers);
+            log.debug("strings before sort : {}", strings);
 
 
             Collections.sort(numbers);
@@ -93,59 +93,51 @@ public class ParserServiceImpl implements ParserService{
                 return sameChar;
             });
 
-            log.debug("numbers after sort : {}",numbers);
-            log.debug("strings after sort : {}",strings);
+            log.debug("numbers after sort : {}", numbers);
+            log.debug("strings after sort : {}", strings);
 
-            return crossMergeStringsAndNumbers(strings,numbers);
+            return crossMergeStringsAndNumbers(strings, numbers);
 
-        }catch (ServiceException se){
-            log.info("ServiceException : {}",se.getServiceError());
+        } catch (ServiceException se) {
+            log.info("ServiceException : {}", se.getServiceError());
             throw new ServiceException(se.getServiceError());
-        }catch (Exception e){
-            log.info("Exception : {}",e.getMessage(),e);
+        } catch (Exception e) {
+            log.info("Exception : {}", e.getMessage(), e);
             throw new ServiceException(e, ServiceError.PARSING_DATA_CROSS_MERGE_ERROR);
         }
-
     }
 
     public String crossMergeStringsAndNumbers(List strings, List numbers) throws ServiceException {
-        try{
+        try {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < Math.max(numbers.size(),strings.size()); i++) {
+            for (int i = 0; i < Math.max(numbers.size(), strings.size()); i++) {
                 if (i < strings.size()) sb.append(strings.get(i));
                 if (i < numbers.size()) sb.append(numbers.get(i));
             }
             return sb.toString();
-
-        }catch (Exception e){
-            log.info("Exception : {}",e.getMessage(),e);
+        } catch (Exception e) {
+            log.info("Exception : {}", e.getMessage(), e);
             throw new ServiceException(e, ServiceError.PARSING_DATA_CROSS_MERGE_ERROR);
         }
-
     }
-
 
     public ParserResDto calculOutput(int unitNum, String data) throws ServiceException {
+        try {
+            int quotient = data.length() / unitNum;
+            int remainder = data.length() % unitNum;
 
-       try{
-           int  quotient = data.length() / unitNum;
-           int  remainder = data.length() % unitNum;
-
-           String quotientData = data.substring(0, (quotient * unitNum));
-           String remainderData = data.substring(quotientData.length());
-           return ParserResDto.builder()
-                   .quotientNum(quotient)
-                   .quotientData(quotientData)
-                   .remainderNum(remainder)
-                   .remainderData(remainderData)
-                   .unitNum(unitNum)
-                   .build();
-       }catch (Exception e){
-        log.info("Exception : {}",e.getMessage(),e);
-        throw new ServiceException(e, ServiceError.PARSING_DATA_CALCULATE_ERROR);
-       }
+            String quotientData = data.substring(0, (quotient * unitNum));
+            String remainderData = data.substring(quotientData.length());
+            return ParserResDto.builder()
+                    .quotientNum(quotient)
+                    .quotientData(quotientData)
+                    .remainderNum(remainder)
+                    .remainderData(remainderData)
+                    .unitNum(unitNum)
+                    .build();
+        } catch (Exception e) {
+            log.info("Exception : {}", e.getMessage(), e);
+            throw new ServiceException(e, ServiceError.PARSING_DATA_CALCULATE_ERROR);
+        }
     }
-
-
-
 }

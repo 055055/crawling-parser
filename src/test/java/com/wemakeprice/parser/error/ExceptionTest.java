@@ -25,5 +25,4 @@ class ExceptionTest {
         });
         assertEquals(exception.getServiceError().getMessage(), ServiceError.SERVICE_ERROR.getMessage());
     }
-
 }
