@@ -17,7 +17,7 @@ class ExceptionTest {
         assertEquals(exception.getMessage(), "Not supported");
     }
 
-    @DisplayName("ServiceException SERVICE_ERROR.SERIVCE_ERROR 테스트 성공")
+    @DisplayName("ServiceException SERVICE_ERROR.SERVICE_ERROR 테스트 성공")
     @Test
     public void SERVICE_EXCEPTION_MESSAGE_TEST_SUCCESS(){
         ServiceException exception = assertThrows(ServiceException.class, () -> {
